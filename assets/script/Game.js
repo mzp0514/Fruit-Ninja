@@ -12,13 +12,13 @@ window.fruitInfo = [
     //peach
     { imageSrc: "images/fruit/peach", width: 62, height: 59 },
     //melon
-    { imageSrc: "images/fruit/melon", width: 98, height: 85 } ,
+    { imageSrc: "images/fruit/melon", width: 120, height: 110 } ,
     //apple
     { imageSrc: "images/fruit/apple", width: 66, height: 66 } ,
     //basaha
     { imageSrc: "images/fruit/basaha", width: 68, height: 72 } ,
     //banana
-    { imageSrc: "images/fruit/banana", width: 126, height: 50 } ,
+    { imageSrc: "images/fruit/banana", width: 100, height: 40 } ,
     //boom
     { imageSrc: "images/fruit/boom", width: 66, height:68 }
 ]
@@ -66,6 +66,21 @@ cc.Class({
         scoreLabel:{
             default: null,
             type: cc.Label
+        },
+
+        xlabel1:{
+            default: null,
+            type: cc.Node
+        },
+
+        xlabel2:{
+            default: null,
+            type: cc.Node
+        },
+
+        xlabel3:{
+            default: null,
+            type: cc.Node
         }
     },
 
@@ -79,6 +94,9 @@ cc.Class({
         
         this.piece1Pools = new Array(5)
         this.piece2Pools = new Array(5)
+     
+        this.xlabels = [this.xlabel1, this.xlabel2, this.xlabel3]
+        this.miss = 0
 
         this.score = 0
         this.cnt = 0
@@ -100,7 +118,7 @@ cc.Class({
         // this.ctx.strokeColor = new cc.Color(36, 134, 185, 32)
         // this.ctx.fillColor = new cc.Color(82, 82, 136, 32)
         this.schedule(function(){
-            this.attack(0)
+            this.attack(3)
         }, 5);
     },
 
@@ -113,7 +131,7 @@ cc.Class({
                 this.piece2Pools[i] = new cc.NodePool()
             }
             
-            for(let j = 0; j < 8; j++){
+            for(let j = 0; j < 9; j++){
                 let item = cc.instantiate(this.fruitPrefab) 
                 item.Name = i.toString()
                 item.getComponent(cc.Sprite).sizeMode = 'custom'
@@ -132,8 +150,8 @@ cc.Class({
                         function(err, spriteFrame) {          
                             item1.getComponent(cc.Sprite).spriteFrame = spriteFrame
                     })
-                    item1.width = window.fruitInfo[i]['width'] * 1.5
-                    item1.height = window.fruitInfo[i]['height'] * 1.5
+                    item1.width = window.fruitInfo[i]['width']* 1.25
+                    item1.height = window.fruitInfo[i]['height'] *1.5
                     this.piece1Pools[i].put(item1)
 
                     let item2 = cc.instantiate(this.fruit2Prefab) 
@@ -142,7 +160,7 @@ cc.Class({
                         function(err, spriteFrame) {          
                             item2.getComponent(cc.Sprite).spriteFrame = spriteFrame
                     })
-                    item2.width = window.fruitInfo[i]['width'] * 1.5
+                    item2.width = window.fruitInfo[i]['width'] * 1.25
                     item2.height = window.fruitInfo[i]['height'] * 1.5
                     this.piece2Pools[i].put(item2)
                 }
@@ -151,20 +169,61 @@ cc.Class({
         }
     },
 
+    randomNum: function(min, max) {
+        let num = Math.floor(Math.random() * (max - min + 1) + min)
+        console.log(min, max, num)
+        return num
+    },
+
     attack: function(id){
+        /* 群 */
         if(id === 0){
-            this.produceFruit(1, -200, -400, 100, -400, 0)
-            this.produceFruit(2, -700, 0, 100, 0, 1)
-            this.produceFruit(3, -100, -500, 300, -500, 0)
-            this.produceFruit(0, -700, -100, 0, -100, 1)
-            this.produceFruit(4, -700, 100, 0, 100, 1)
-            this.produceFruit(5, -400, -500, 400, -500, 0)
+            let count = this.randomNum(5, 10)
+            for(let i = 0; i < count; i++){
+                let fruit = this.randomNum(0, 5)
+                let stx = this.randomNum(-650, 650)
+                let edx = this.randomNum(-650, 650)
+                this.produceFruit(fruit, stx, -400, edx, -400, 0) 
+            }
+        }
+        /* 连续 */
+        else if(id === 1){
+            let count = this.randomNum(5, 10)
+            this.schedule( function(){
+                let fruit = this.randomNum(0, 5)
+                let stx = this.randomNum(-650, 650)
+                let edx = this.randomNum(-650, 650)
+                this.produceFruit(fruit, stx, -400, edx, -400, 0) 
+            }.bind(this), 0.5, count)
+        }
+        /* 3 * 3 */
+        else if(id === 2){
+            for(let i = -1; i < 2; i++){
+                for(let j = -1; j < 2; j++){
+                    let fruit = this.randomNum(0, 5)
+                    let shift = this.randomNum(0, 1)
+                    let stx = 700, sty = 150 * j
+                    if(shift && j === 0){
+                        stx = -stx
+                    }
+                    this.produceFruit(fruit, stx, sty, 200 * i, sty, 1) 
+                }
+            }
+        }
+
+        else if(id === 3){
+            for(let i = -1; i <= 1; i++){
+                if(i === 0) continue
+                for(let j = -2; j <= 2; j++){
+                    let fruit = this.randomNum(0, 5)
+                    this.produceFruit(fruit, 700 * i, 100 * i, 150 * j, 100 * i, 1)
+                }
+            }
         }
     },
 
     //param: fruit-id, pos_st, pos_ed, curve(0:bezier 1:straight l-r 2:straight u-d)
     produceFruit: function(id, xst, yst, xed, yed, type){
-    
         let item = null
 
         if (this.pools[id].size() > 0) { // 通过 size 接口判断对象池中是否有空闲的对象
@@ -174,13 +233,14 @@ cc.Class({
             //item = cc.instantiate(this.enemyPrefab);
             return
         }
-        
+
         this.node.addChild(item)
         item.setPosition(xst, yst)
         let action = null
         
         if(type === 0){
-            let bezier = [cc.v2(xst, yst), cc.v2((xst + xed)/2, 700), cc.v2(xed, yed)]
+            let height = this.randomNum(700, 1200)
+            let bezier = [cc.v2(xst, yst), cc.v2((xst + xed)/2, height), cc.v2(xed, yed)]
             let bezierAction = cc.bezierTo(1.5, bezier)
             let rotate = null
 
@@ -207,6 +267,16 @@ cc.Class({
 
         item.runAction(cc.sequence(action, cc.callFunc(function(){
             this.pools[id].put(item)
+            if(this.miss < 3){
+                let sprite = this.xlabels[this.miss].getComponent(cc.Sprite)
+                cc.loader.loadRes('images/' + this.miss.toString(), cc.SpriteFrame, function(err, spriteFrame) {          
+                    sprite.spriteFrame = spriteFrame
+                });  
+                this.miss ++
+            }
+            else{
+                //game over
+            }
         }.bind(this))))
 
     },
@@ -221,6 +291,9 @@ cc.Class({
         }
         else if(id === 2){
             juice = cc.instantiate(this.appleJuicePrefab)
+        }
+        else{
+            return
         }
         
         this.node.addChild(juice)
@@ -302,6 +375,8 @@ cc.Class({
                 }
                 else{
                     this.boom(loc)
+                    this.score = Math.max(0, this.score - 100)
+                    this.scoreLabel.string = this.score.toString()
                 }
             }
             
