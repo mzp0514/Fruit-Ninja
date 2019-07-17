@@ -41,8 +41,8 @@
     },
     "_scale": {
       "__type__": "cc.Vec3",
-      "x": 0.2421318509325957,
-      "y": 0.2421318509325957,
+      "x": 0.19627193651701275,
+      "y": 0.19627193651701275,
       "z": 1
     },
     "_quat": {
@@ -1366,6 +1366,30 @@
       "__id__": 5
     },
     "_enabled": true,
+    "doubleRing": {
+      "__id__": 14
+    },
+    "newGameRing": {
+      "__id__": 21
+    },
+    "quitRing": {
+      "__id__": 25
+    },
+    "doubleButton": {
+      "__id__": 16
+    },
+    "newGameButton": {
+      "__id__": 23
+    },
+    "quitButton": {
+      "__id__": 27
+    },
+    "splatterAudio": {
+      "__uuid__": "6b4e1508-5852-4556-924c-85d83c4e0d3b"
+    },
+    "bgAudio": {
+      "__uuid__": "72c3de4f-2dfd-4b0d-a119-c66d05f404a1"
+    },
     "_id": "fayyDaOP9C34xUKyomavu5"
   },
   {

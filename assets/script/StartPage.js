@@ -1,45 +1,46 @@
-// Learn cc.Class:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/class.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/class.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://docs.cocos2d-x.org/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] https://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
-
 cc.Class({
     extends: cc.Component,
 
     properties: {
-        // foo: {
-        //     // ATTRIBUTES:
-        //     default: null,        // The default value will be used only when the component attaching
-        //                           // to a node for the first time
-        //     type: cc.SpriteFrame, // optional, default is typeof default
-        //     serializable: true,   // optional, default is true
-        // },
-        // bar: {
-        //     get () {
-        //         return this._bar;
-        //     },
-        //     set (value) {
-        //         this._bar = value;
-        //     }
-        // },
+        doubleRing:{
+            default: null,
+            type: cc.Node
+        },
+        newGameRing:{
+            default: null,
+            type: cc.Node
+        },
+        quitRing:{
+            default: null,
+            type: cc.Node
+        },
+        doubleButton:{
+            default: null,
+            type: cc.Node
+        },
+        newGameButton:{
+            default: null,
+            type: cc.Node
+        },
+        quitButton:{
+            default: null,
+            type: cc.Node
+        },
+        splatterAudio:{
+            default: null,
+            type: cc.AudioClip
+        },
+        bgAudio:{
+            default: null,
+            type: cc.AudioClip
+        }
     },
 
     // LIFE-CYCLE CALLBACKS:
 
      onLoad () {
-        var doubleRing = cc.find('dojo', this.node),
-            newGameRing = cc.find('new-game', this.node),
-            quitRing = cc.find('quit', this.node),
-            doubleButton = cc.find('empty', this.node),
-            newGameButton = cc.find('melon', this.node),
-            quitButton = cc.find('boom', this.node)
-        this.buttons = [doubleButton, newGameButton, quitButton]
-        this.rings = [doubleRing, newGameRing, quitRing]
+        this.buttons = [this.doubleButton, this.newGameButton, this.quitButton]
+        this.rings = [this.doubleRing, this.newGameRing, this.quitRing]
 
         let rotate1 = cc.rotateBy(1, -90)
         let rotate2 = cc.rotateBy(1, 90)
@@ -49,19 +50,26 @@ cc.Class({
             this.buttons[i].runAction(rotate2.clone().repeatForever())
         }
         
+        cc.audioEngine.playMusic(this.bgAudio, true);
+
+        cc.audioEngine.setEffectsVolume(1);
+
         this.node.on('touchmove', this.onTouchMove, this)
      },
 
     onTouchMove: function(touch, event) {
         let touchLoc = touch.getLocation();
     
-        if(this.buttons[1].getBoundingBoxToWorld().contains(touchLoc)){
+        if(this.newGameButton.getBoundingBoxToWorld().contains(touchLoc)){
             this.stopActions()
+            
+            cc.audioEngine.stopMusic()
+            cc.audioEngine.playEffect(this.splatterAudio, false)
 
-            let loc = this.buttons[1].getPosition();
+            let loc = this.newGameButton.getPosition();
 
-            let width = this.buttons[1].width;
-            let height = this.buttons[1].height;
+            let width = this.newGameButton.width;
+            let height = this.newGameButton.height;
             
             let melon1 = new cc.Node('melon1');
             melon1.parent = this.node;
@@ -89,7 +97,7 @@ cc.Class({
                 sprite2.spriteFrame = spriteFrame
             });   
 
-            this.buttons[1].destroy()
+            this.newGameButton.destroy()
             
             this.node.off('touchmove', this.onTouchMoved, this)
             
