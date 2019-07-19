@@ -14,6 +14,8 @@ cc.Class({
             default: null,
             type: cc.Node
         },
+
+
         doubleButton:{
             default: null,
             type: cc.Node
@@ -26,6 +28,8 @@ cc.Class({
             default: null,
             type: cc.Node
         },
+
+
         splatterAudio:{
             default: null,
             type: cc.AudioClip
@@ -33,6 +37,15 @@ cc.Class({
         bgAudio:{
             default: null,
             type: cc.AudioClip
+        },
+
+        fruit1Prefab:{
+            default: null,
+            type: cc.Prefab
+        },
+        fruit2Prefab:{
+            default: null,
+            type: cc.Prefab
         }
     },
 
@@ -71,32 +84,18 @@ cc.Class({
             let width = this.newGameButton.width;
             let height = this.newGameButton.height;
             
-            let melon1 = new cc.Node('melon1');
+            let melon1 = cc.instantiate(this.fruit1Prefab)
             melon1.parent = this.node;
             melon1.setPosition(loc.sub(cc.v2(60, 0)))
             melon1.width = width * 0.8
             melon1.height = height
 
-            let sprite1 = melon1.addComponent(cc.Sprite)
-            sprite1.sizeMode = 'custom'
-
-            let melon2 = new cc.Node('melon2')
+            let melon2 = cc.instantiate(this.fruit2Prefab)
             melon2.parent = this.node;
             melon2.setPosition(loc.add(cc.v2(60, 0)))
             melon2.width = width * 0.8
             melon2.height = height
         
-            let sprite2 = melon2.addComponent(cc.Sprite)
-            sprite2.sizeMode = 'custom'
-
-            cc.loader.loadRes('images/fruit/melon-1', cc.SpriteFrame, function(err, spriteFrame) {          
-                sprite1.spriteFrame = spriteFrame
-            });   
-            
-            cc.loader.loadRes('images/fruit/melon-2', cc.SpriteFrame, function(err, spriteFrame) {          
-                sprite2.spriteFrame = spriteFrame
-            });   
-
             this.newGameButton.destroy()
             
             this.node.off('touchmove', this.onTouchMoved, this)
@@ -112,6 +111,12 @@ cc.Class({
             let bezierAction2 = cc.bezierBy(0.5, bezier2)
             let rotate2 = cc.rotateBy(0.5, 90)
             melon2.runAction(cc.sequence(cc.spawn(bezierAction2, rotate2), cc.callFunc(this.shiftScene)))
+            
+        }
+
+        else if(this.quitButton.getBoundingBoxToWorld().contains(touchLoc)){
+            
+            cc.game.end()
             
         }
       

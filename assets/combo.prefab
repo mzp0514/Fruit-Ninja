@@ -36,18 +36,18 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 209.6,
-      "height": 100
+      "width": 481,
+      "height": 165
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
-      "x": 0.47956472872177436,
-      "y": 0.5000000000000002
+      "x": 0.5,
+      "y": 0.5
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": -100,
-      "y": 290,
+      "x": -300,
+      "y": 210,
       "z": 0
     },
     "_scale": {
@@ -56,45 +56,45 @@
       "y": 1,
       "z": 1
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
-    "_quat": {
-      "__type__": "cc.Quat",
-      "x": 0,
-      "y": 0,
-      "z": 0,
-      "w": 1
-    },
+    "_rotationX": -20,
+    "_rotationY": -20,
     "_skewX": 0,
     "_skewY": 0,
     "groupIndex": 0,
-    "_id": ""
+    "_id": "",
+    "_eulerAngles": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 19.999999999999996
+    }
   },
   {
-    "__type__": "cc.Label",
+    "__type__": "cc.Sprite",
     "_name": "",
     "_objFlags": 0,
     "node": {
       "__id__": 1
     },
     "_enabled": true,
-    "_useOriginalSize": false,
-    "_string": "COMBO",
-    "_N$string": "COMBO",
-    "_fontSize": 50,
-    "_lineHeight": 100,
-    "_enableWrapText": true,
-    "_N$file": {
-      "__uuid__": "6d36274a-04b9-4b5a-8ab1-997bd4f3c098"
+    "_srcBlendFactor": 770,
+    "_dstBlendFactor": 771,
+    "_spriteFrame": {
+      "__uuid__": "90d0e762-be89-45df-80bf-326191fdbb32"
     },
-    "_isSystemFontUsed": false,
-    "_spacingX": 0,
-    "_batchAsBitmap": false,
-    "_N$horizontalAlign": 1,
-    "_N$verticalAlign": 1,
-    "_N$fontFamily": "Arial",
-    "_N$overflow": 3,
-    "_N$cacheMode": 0,
+    "_type": 0,
+    "_sizeMode": 0,
+    "_fillType": 0,
+    "_fillCenter": {
+      "__type__": "cc.Vec2",
+      "x": 0,
+      "y": 0
+    },
+    "_fillStart": 0,
+    "_fillRange": 0,
+    "_isTrimmedMode": true,
+    "_state": 0,
+    "_atlas": null,
     "_id": ""
   },
   {
@@ -103,9 +103,9 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "527fbd88-6ca0-48ff-9c17-1fd5287314d9"
+      "__uuid__": "17de77df-ab03-48d6-9b4c-27cdd056068d"
     },
-    "fileId": "7c85DuP6VJR6lL0b1iGutu",
+    "fileId": "68GobjFmBGKq0MXo7tCms2",
     "sync": false
   }
 ]

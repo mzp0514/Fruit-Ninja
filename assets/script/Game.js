@@ -1,19 +1,19 @@
+window.score = 0
+
 var fruitInfo = [
     //peach
-    { imageSrc: "images/fruit/peach", width: 62, height: 59 },
+    { imageSrc: "images/fruit/peach", width: 100, height: 90 },
     //melon
-    { imageSrc: "images/fruit/melon", width: 120, height: 110 } ,
+    { imageSrc: "images/fruit/melon", width: 180, height: 165 } ,
     //apple
-    { imageSrc: "images/fruit/apple", width: 66, height: 66 } ,
+    { imageSrc: "images/fruit/apple", width: 100, height: 100 } ,
     //basaha
-    { imageSrc: "images/fruit/basaha", width: 68, height: 72 } ,
+    { imageSrc: "images/fruit/basaha", width: 90, height: 100 } ,
     //banana
-    { imageSrc: "images/fruit/banana", width: 120, height: 50 } ,
+    { imageSrc: "images/fruit/banana", width: 180, height: 75 } ,
     //boom
-    { imageSrc: "images/fruit/boom", width: 66, height:68 }
+    { imageSrc: "images/fruit/boom", width: 100, height: 105 }
 ]
-
-
 
 cc.Class({
     extends: cc.Component,
@@ -130,9 +130,8 @@ cc.Class({
         this.xlabels = [this.xlabel1, this.xlabel2, this.xlabel3]
         this.miss = 0
 
-        this.score = 0
         this.cnt = 0
-        this.scoreLabel.string = this.score.toString()
+        this.scoreLabel.string = window.score.toString()
 
         this.initPools()
 
@@ -151,9 +150,10 @@ cc.Class({
 
         this.stage = 0
         this.round = 0
+        this.fruitScale = 1
         
         this.schedule(function(){
-            this.attack(this.randomNum(0, 3 + this.stage))
+            this.attack(this.randomNum(0, 4 + this.stage))
             if(++this.round >= 4 && this.stage < 2){
                 this.stage++
                 if(this.stage === 1){
@@ -181,8 +181,8 @@ cc.Class({
                     function(err, spriteFrame) {          
                         item.getComponent(cc.Sprite).spriteFrame = spriteFrame
                 })
-                item.width = fruitInfo[i]['width'] * 1.5
-                item.height = fruitInfo[i]['height'] * 1.5
+                item.width = fruitInfo[i]['width']
+                item.height = fruitInfo[i]['height']
                 this.pools[i].put(item)
                 
                 if(i < 5){
@@ -192,8 +192,8 @@ cc.Class({
                         function(err, spriteFrame) {          
                             item1.getComponent(cc.Sprite).spriteFrame = spriteFrame
                     })
-                    item1.width = fruitInfo[i]['width']* 1.25
-                    item1.height = fruitInfo[i]['height'] *1.5
+                    item1.width = fruitInfo[i]['width'] * 0.8
+                    item1.height = fruitInfo[i]['height']
                     this.piece1Pools[i].put(item1)
 
                     let item2 = cc.instantiate(this.fruit2Prefab) 
@@ -202,8 +202,8 @@ cc.Class({
                         function(err, spriteFrame) {          
                             item2.getComponent(cc.Sprite).spriteFrame = spriteFrame
                     })
-                    item2.width = fruitInfo[i]['width'] * 1.25
-                    item2.height = fruitInfo[i]['height'] * 1.5
+                    item2.width = fruitInfo[i]['width'] * 0.8
+                    item2.height = fruitInfo[i]['height']
                     this.piece2Pools[i].put(item2)
                 }
                 
@@ -217,7 +217,7 @@ cc.Class({
     },
 
     attack: function(id){
-        // 群1
+        // 群
         if(id === 0){
             let count = this.randomNum(3 + 2 * this.stage, 4 + this.stage * 4)
             for(let i = 0; i < count; i++){
@@ -238,8 +238,18 @@ cc.Class({
             }.bind(this), 0.75 - this.stage * 0.25, count)
         }
 
-        // 3 * 3 
+        // 连续2
         else if(id === 2){
+            let count = this.randomNum(5 + 2 * this.stage, 4 + this.stage * 4)
+            this.schedule( function(){
+                let fruit = this.randomNum(0, 5)
+                this.produceFruit(fruit, -600, -400, 1000, -400, 0) 
+                this.produceFruit(fruit, 600, -400, -1000, -400, 0) 
+            }.bind(this), 0.75 - this.stage * 0.25, count)
+        }
+
+        // 3 * 3 
+        else if(id === 3){
             for(let i = -1; i < 2; i++){
                 for(let j = -1; j < 2; j++){
                     let fruit = this.randomNum(0, 5)
@@ -254,7 +264,7 @@ cc.Class({
         }
 
         // 2 * 5 
-        else if(id === 3){
+        else if(id === 4){
             for(let i = -1; i <= 1; i++){
                 if(i === 0) continue
                 for(let j = -2; j <= 2; j++){
@@ -265,7 +275,7 @@ cc.Class({
         }
 
         // 3 * 5
-        else if(id === 4){
+        else if(id === 5){
             for(let i = -1; i <= 1; i++){
                 for(let j = -2; j <= 2; j++){
                     let fruit = this.randomNum(0, 5)
@@ -274,7 +284,7 @@ cc.Class({
             }
         }
         //-2: 0    -1: -1 0 1   0: -2 -1 0 1 2 
-        else if(id === 5){
+        else if(id === 6){
             for(let i = -2; i <= 2; i++){
                 for(let j = Math.abs(i) - 2; j <= -(Math.abs(i) - 2); j++){
                     let fruit = this.randomNum(0, 5)
@@ -298,6 +308,8 @@ cc.Class({
             return
         }
 
+        item.scale = this.fruitScale
+
         this.node.addChild(item)
         item.setPosition(xst, yst)
         let action = null
@@ -320,13 +332,14 @@ cc.Class({
 
         else if (type === 1) {
             let moveAction1 = cc.moveTo(0.5, xed, yed)
-            let rotate1 = cc.rotateBy(3 - this.stage, 2 * 360)
+            let rotate1 = cc.rotateBy(3.5 - this.stage, 2 * 360)
             let moveAction2 = cc.moveTo(0.5, -xst, yst)
             let rotate2 = cc.rotateBy(0.5, 180)
             action = cc.sequence(cc.spawn(moveAction1, rotate1), cc.spawn(moveAction2, rotate2))
         }
 
         item.runAction(cc.sequence(action, cc.callFunc(function(){
+            item.scale = 1
             this.pools[id].put(item)
             if(id !== 5){
                 if(this.miss < 3){
@@ -364,6 +377,9 @@ cc.Class({
 
         let piece1 = this.piece1Pools[id].get()
         let piece2 = this.piece2Pools[id].get()
+
+        piece1.scale = this.fruitScale
+        piece2.scale = this.fruitScale
         
         //piece1.rotation = angle
         //piece2.rotation = angle
@@ -380,6 +396,7 @@ cc.Class({
         let bezierAction1 = cc.bezierBy(1, bezier1)
         let rotate1 = cc.rotateBy(1, -90)
         piece1.runAction(cc.sequence(cc.spawn(bezierAction1, rotate1), cc.callFunc(function(){
+            piece1.scale = 1
             this.piece1Pools[id].put(piece1)
         }.bind(this))))
 
@@ -387,11 +404,14 @@ cc.Class({
         let bezierAction2 = cc.bezierBy(1, bezier2)
         let rotate2 = cc.rotateBy(1, 90)
         piece2.runAction(cc.sequence(cc.spawn(bezierAction2, rotate2), cc.callFunc(function(){
+            piece2.scale = 1
             this.piece2Pools[id].put(piece2)
         }.bind(this))))
     },
 
     missAdd: function(){
+        this.fruitScale = 1
+
         let sprite = this.xlabels[this.miss].getComponent(cc.Sprite)
         cc.loader.loadRes('images/' + this.miss.toString(), cc.SpriteFrame, function(err, spriteFrame) {          
             sprite.spriteFrame = spriteFrame
@@ -412,14 +432,14 @@ cc.Class({
 
     comboAdd: function(){
         let combo = cc.instantiate(this.comboPrefab)
-        let comboLabel = combo.getComponent(cc.Label)
-        comboLabel.string += ' ' + this.cnt.toString()
-        combo.color = new cc.Color(255, 204, 0)
+        combo.scale = this.cnt / 8
         this.node.addChild(combo)
         this.scheduleOnce(function(){combo.destroy()}, 2)
     },
 
     boom: function(loc){
+        this.fruitScale = 1
+
         cc.audioEngine.playEffect(this.boomAudio, false)
         let bomb = cc.instantiate(this.bombPrefab) 
         this.node.addChild(bomb)
@@ -431,12 +451,13 @@ cc.Class({
 
         this.cnt = 0
         this.callbackfunc = function(){
-            this.score += this.cnt * this.cnt
-            this.scoreLabel.string = this.score.toString()
+            window.score += this.cnt * this.cnt
+            this.scoreLabel.string = window.score.toString()
             if(this.cnt >= 3){
                 cc.audioEngine.playEffect(this.comboAudio, false)
                 this.recover(Math.min(3, this.cnt - 2))
                 this.comboAdd()
+                this.fruitScale = Math.max(this.fruitScale, 1 + (this.cnt - 3)/10)
             }
             this.cnt = 0
         }.bind(this)
@@ -467,41 +488,45 @@ cc.Class({
         
         for(let i = fruits.length - 1; i >= 0; i--){
             if(fruits[i].getBoundingBoxToWorld().contains(end) && fruits[i].Name && fruits[i].Name.length === 1){
-                let loc = fruits[i].getPosition()
-                let id = parseInt(fruits[i].Name)
-                fruits[i].stopAllActions()
-                this.pools[id].put(fruits[i])
-                if(id < 5) {
-                    this.producePieces(id, loc)
-                    this.produceJuice(id, loc)
-                    this.cnt++
-                }
-                else{
-                    this.boom(loc)
-                    this.cnt = 0
-                    this.score = Math.max(0, this.score - 10)
-                    this.scoreLabel.string = this.score.toString()
-                }
+                this.cut(fruits[i])
             }
-            
         }
-
     },
+
+    cut: function (fruit){
+        let loc = fruit.getPosition()
+        let id = parseInt(fruit.Name)
+        fruit.stopAllActions()
+        this.pools[id].put(fruit)
+        if(id < 5) {
+            this.producePieces(id, loc)
+            this.produceJuice(id, loc)
+            this.cnt++
+        }
+        else{
+            this.boom(loc)
+            this.cnt = 0
+            window.score = Math.max(0, window.score - 10)
+            this.scoreLabel.string = window.score.toString()
+        }    
+    },
+
+    
 
     onTouchEnd: function(touch, event){
         this.points.length = 0
         this.unschedule(this.callbackfunc)
-        this.score += this.cnt
-        this.scoreLabel.string = this.score.toString()
+        window.score += this.cnt
+        this.scoreLabel.string = window.score.toString()
     },
 
     gameOver: function(){
-       // cc.audioEngine.stopMusic(this.bgmAudio)
-        cc.audioEngine.playEffect(this.overAudio, false)
-        //
-        //
-        //
-        //
+        cc.audioEngine.stopMusic(this.bgmAudio)
+        this.unscheduleAllCallbacks()
+        let over = cc.audioEngine.playEffect(this.overAudio, false)
+        cc.audioEngine.setFinishCallback(over, function () {
+            cc.director.loadScene('OverPage')
+        });
     },
 
     draw: function() {
