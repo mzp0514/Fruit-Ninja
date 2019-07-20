@@ -40,7 +40,7 @@
   "webOrientation": "auto",
   "wechatgame": {
     "REMOTE_SERVER_ROOT": "http://152.136.228.72:8080",
-    "appid": "wx08808ac7a2cafe5e",
+    "appid": "wx02f4c6da84065d7d",
     "orientation": "landscapeRight",
     "separate_engine": false,
     "subContext": ""

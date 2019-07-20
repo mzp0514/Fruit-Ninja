@@ -33,6 +33,8 @@ cc.Class({
         this.againButton.node.on('click', function (button) {
             cc.director.loadScene('Game')
         })
+
+        window.score = 0
     },
 
     start () {

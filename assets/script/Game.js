@@ -151,17 +151,31 @@ cc.Class({
         this.stage = 0
         this.round = 0
         this.fruitScale = 1
+
+        cc.director.preloadScene('OverPage')
+
+        this.callbackfunc = function(){
+            if(this.cnt >= 3){
+                window.score += this.cnt * this.cnt
+                this.comboAdd() 
+            }
+            else{
+                window.score += this.cnt
+            }
+            this.scoreLabel.string = window.score.toString()
+            this.cnt = 0
+        }.bind(this)
         
         this.schedule(function(){
             this.attack(this.randomNum(0, 4 + this.stage))
-            if(++this.round >= 4 && this.stage < 2){
+            if(++this.round >= 4 && this.stage < 3){
                 this.stage++
                 if(this.stage === 1){
                     cc.audioEngine.playMusic(this.bgmAudio, true)
                 }
                 this.round = 0
             }
-        }, 6);
+        }, 5);
     },
 
     initPools: function(){
@@ -219,7 +233,7 @@ cc.Class({
     attack: function(id){
         // 群
         if(id === 0){
-            let count = this.randomNum(3 + 2 * this.stage, 4 + this.stage * 4)
+            let count = this.randomNum(3 + 2 * this.stage, 3 + this.stage * 3)
             for(let i = 0; i < count; i++){
                 let fruit = this.randomNum(0, 5)
                 let stx = this.randomNum(-650, 650)
@@ -229,23 +243,23 @@ cc.Class({
         }
         // 连续1
         else if(id === 1){
-            let count = this.randomNum(5 + 2 * this.stage, 4 + this.stage * 4)
+            let count = this.randomNum(5 + 2 * this.stage, 5 + this.stage * 3)
             this.schedule( function(){
                 let fruit = this.randomNum(0, 5)
                 let stx = this.randomNum(-650, 650)
                 let edx = this.randomNum(-650, 650)
                 this.produceFruit(fruit, stx, -400, edx, -400, 0) 
-            }.bind(this), 0.75 - this.stage * 0.25, count)
+            }.bind(this), 0.8 - this.stage * 0.2, count)
         }
 
         // 连续2
         else if(id === 2){
-            let count = this.randomNum(5 + 2 * this.stage, 4 + this.stage * 4)
+            let count = this.randomNum(4 + 2 * this.stage, 4 + this.stage * 3)
             this.schedule( function(){
                 let fruit = this.randomNum(0, 5)
                 this.produceFruit(fruit, -600, -400, 1000, -400, 0) 
                 this.produceFruit(fruit, 600, -400, -1000, -400, 0) 
-            }.bind(this), 0.75 - this.stage * 0.25, count)
+            }.bind(this), 0.8 - this.stage * 0.2, count)
         }
 
         // 3 * 3 
@@ -304,7 +318,7 @@ cc.Class({
 
         if (this.pools[id].size() > 0) { 
             item = this.pools[id].get();
-        } else { // 如果没有空闲对象
+        } else { 
             return
         }
 
@@ -316,7 +330,7 @@ cc.Class({
         
         if(type === 0){
             let height = this.randomNum(700, 1200)
-            let time = 2.5 - 0.5 * this.stage
+            let time = 2.5 - 0.4 * this.stage
             let bezier = [cc.v2(xst, yst), cc.v2((xst + xed)/2, height), cc.v2(xed, yed)]
             let bezierAction = cc.bezierTo(time, bezier)
             let rotate = null
@@ -332,20 +346,21 @@ cc.Class({
 
         else if (type === 1) {
             let moveAction1 = cc.moveTo(0.5, xed, yed)
-            let rotate1 = cc.rotateBy(3.5 - this.stage, 2 * 360)
+            let rotate1 = cc.rotateBy(3 - this.stage * 0.6, 2 * 360)
             let moveAction2 = cc.moveTo(0.5, -xst, yst)
             let rotate2 = cc.rotateBy(0.5, 180)
             action = cc.sequence(cc.spawn(moveAction1, rotate1), cc.spawn(moveAction2, rotate2))
         }
 
         item.runAction(cc.sequence(action, cc.callFunc(function(){
-            item.scale = 1
+            if(item) item.scale = 1
             this.pools[id].put(item)
             if(id !== 5){
                 if(this.miss < 3){
                     this.missAdd()
-                }
-                else{
+                } 
+                else if(this.miss === 3) {
+                    this.miss++
                     this.gameOver()
                 }
             }
@@ -374,10 +389,14 @@ cc.Class({
 
     producePieces: function(id, loc, angle = 0) {
         cc.audioEngine.playEffect(this.splatterAudio, false)
+        
+        if (this.piece1Pools[id].size() ===  0 || this.piece2Pools[id].size() ===  0) { 
+            return
+        }
 
         let piece1 = this.piece1Pools[id].get()
         let piece2 = this.piece2Pools[id].get()
-
+        
         piece1.scale = this.fruitScale
         piece2.scale = this.fruitScale
         
@@ -396,7 +415,7 @@ cc.Class({
         let bezierAction1 = cc.bezierBy(1, bezier1)
         let rotate1 = cc.rotateBy(1, -90)
         piece1.runAction(cc.sequence(cc.spawn(bezierAction1, rotate1), cc.callFunc(function(){
-            piece1.scale = 1
+            if(piece1) piece1.scale = 1
             this.piece1Pools[id].put(piece1)
         }.bind(this))))
 
@@ -404,7 +423,7 @@ cc.Class({
         let bezierAction2 = cc.bezierBy(1, bezier2)
         let rotate2 = cc.rotateBy(1, 90)
         piece2.runAction(cc.sequence(cc.spawn(bezierAction2, rotate2), cc.callFunc(function(){
-            piece2.scale = 1
+            if(piece2) piece2.scale = 1
             this.piece2Pools[id].put(piece2)
         }.bind(this))))
     },
@@ -431,6 +450,10 @@ cc.Class({
     },
 
     comboAdd: function(){
+        cc.audioEngine.playEffect(this.comboAudio, false)
+        this.recover(Math.min(3, this.cnt - 2))
+        this.fruitScale = Math.max(this.fruitScale, 1 + (this.cnt - 3)/10)
+
         let combo = cc.instantiate(this.comboPrefab)
         combo.scale = this.cnt / 8
         this.node.addChild(combo)
@@ -450,19 +473,8 @@ cc.Class({
         this.points.push(touch.getLocation())
 
         this.cnt = 0
-        this.callbackfunc = function(){
-            window.score += this.cnt * this.cnt
-            this.scoreLabel.string = window.score.toString()
-            if(this.cnt >= 3){
-                cc.audioEngine.playEffect(this.comboAudio, false)
-                this.recover(Math.min(3, this.cnt - 2))
-                this.comboAdd()
-                this.fruitScale = Math.max(this.fruitScale, 1 + (this.cnt - 3)/10)
-            }
-            this.cnt = 0
-        }.bind(this)
 
-        this.schedule(this.callbackfunc, 0.75)
+        this.schedule(this.callbackfunc, 0.75, cc.macro.REPEAT_FOREVER, 0.75)
     },
 
     onTouchMove: function(touch, event){
@@ -506,7 +518,7 @@ cc.Class({
         else{
             this.boom(loc)
             this.cnt = 0
-            window.score = Math.max(0, window.score - 10)
+            window.score = Math.max(0, window.score - 100)
             this.scoreLabel.string = window.score.toString()
         }    
     },
@@ -516,13 +528,18 @@ cc.Class({
     onTouchEnd: function(touch, event){
         this.points.length = 0
         this.unschedule(this.callbackfunc)
-        window.score += this.cnt
-        this.scoreLabel.string = window.score.toString()
+        this.callbackfunc()
     },
 
     gameOver: function(){
-        cc.audioEngine.stopMusic(this.bgmAudio)
         this.unscheduleAllCallbacks()
+        cc.audioEngine.stopMusic()
+        cc.audioEngine.stopAllEffects()
+
+        this.node.off('touchstart', this.onTouchStart, this)
+        this.node.off('touchmove', this.onTouchMove, this)
+        this.node.off('touchend', this.onTouchEnd, this)
+
         let over = cc.audioEngine.playEffect(this.overAudio, false)
         cc.audioEngine.setFinishCallback(over, function () {
             cc.director.loadScene('OverPage')

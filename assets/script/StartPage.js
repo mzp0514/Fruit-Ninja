@@ -67,6 +67,8 @@ cc.Class({
 
         cc.audioEngine.setEffectsVolume(1);
 
+        cc.director.preloadScene('Game')
+
         this.node.on('touchmove', this.onTouchMove, this)
      },
 
