@@ -118,7 +118,7 @@ cc.Class({
 
         else if(this.quitButton.getBoundingBoxToWorld().contains(touchLoc)){
             
-            cc.game.end()
+            wx.exitMiniProgram()
             
         }
       

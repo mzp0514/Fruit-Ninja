@@ -8,7 +8,8 @@
       "__id__": 1
     },
     "optimizationPolicy": 0,
-    "asyncLoadAssets": false
+    "asyncLoadAssets": false,
+    "readonly": false
   },
   {
     "__type__": "cc.Node",
@@ -56,18 +57,19 @@
       "y": 1,
       "z": 1
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
-    "_skewX": 0,
-    "_skewY": 0,
-    "groupIndex": 0,
-    "_id": "",
     "_eulerAngles": {
       "__type__": "cc.Vec3",
       "x": 0,
       "y": 0,
       "z": 0
-    }
+    },
+    "_skewX": 0,
+    "_skewY": 0,
+    "_is3DNode": false,
+    "groupIndex": 0,
+    "_rotationX": 0,
+    "_rotationY": 0,
+    "_id": ""
   },
   {
     "__type__": "cc.ParticleSystem",
@@ -77,6 +79,11 @@
       "__id__": 1
     },
     "_enabled": true,
+    "_materials": [
+      {
+        "__uuid__": "eca5d2f2-8ef6-41c2-bbe6-f9c79d09c432"
+      }
+    ],
     "_srcBlendFactor": 1,
     "_dstBlendFactor": 1,
     "_custom": true,
@@ -92,7 +99,7 @@
     "autoRemoveOnFinish": true,
     "totalParticles": 200,
     "duration": 0.1,
-    "emissionRate": 200,
+    "emissionRate": 400,
     "life": 1,
     "lifeVar": 0.5,
     "_startColor": {
@@ -143,6 +150,7 @@
       "x": 7,
       "y": 60
     },
+    "_positionType": 1,
     "positionType": 1,
     "emitterMode": 0,
     "gravity": {

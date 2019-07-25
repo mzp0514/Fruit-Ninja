@@ -12,7 +12,9 @@ var fruitInfo = [
     //banana
     { imageSrc: "images/fruit/banana", width: 180, height: 75 } ,
     //boom
-    { imageSrc: "images/fruit/boom", width: 100, height: 105 }
+    { imageSrc: "images/fruit/boom", width: 100, height: 105 },
+    //nuclear
+    { imageSrc: "images/fruit/nuclear", width: 80, height: 150 }
 ]
 
 cc.Class({
@@ -79,6 +81,26 @@ cc.Class({
             type: cc.Node
         },
 
+        ruleNode:{
+            default: null,
+            type: cc.Node
+        },
+
+        goButton:{
+            default: null,
+            type: cc.Button
+        },
+
+        homeButton:{
+            default: null,
+            type: cc.Button
+        },
+
+        pauseButton:{
+            default: null,
+            type: cc.Button
+        },
+
         startAudio:{
             default: null,
             type: cc.AudioClip
@@ -95,6 +117,11 @@ cc.Class({
         },
 
         boomAudio:{
+            default: null,
+            type: cc.AudioClip
+        },
+
+        nuclearAudio:{
             default: null,
             type: cc.AudioClip
         },
@@ -121,65 +148,114 @@ cc.Class({
         
         cc.audioEngine.playEffect(this.startAudio, false)
         
-        this.pools = new Array(6);
-        this.points = new Array(0);
-        
+        //水果、碎片的结点池
+        this.pools = new Array(7)
         this.piece1Pools = new Array(5)
         this.piece2Pools = new Array(5)
+
+        //绘制刀光的点集
+        this.points = new Array(0);
      
         this.xlabels = [this.xlabel1, this.xlabel2, this.xlabel3]
         this.miss = 0
 
-        this.cnt = 0
+        this.comboCnt = 0
         this.scoreLabel.string = window.score.toString()
 
+        //加载结点池
         this.initPools()
 
-        this.node.on('touchstart', this.onTouchStart, this)
-        this.node.on('touchmove', this.onTouchMove, this)
-        //this.node.on('touchcancel', this.onTouchCancel, this);
-        this.node.on('touchend', this.onTouchEnd, this);
-        
+        //页面效果结点
         this.effectNode = new cc.Node('effect')
         this.node.addChild(this.effectNode)
         this.ctx = this.effectNode.addComponent(cc.Graphics)
         this.ctx.lineJoin = cc.Graphics.LineJoin.BEVEL;
 
+        //音乐 音效
         cc.audioEngine.setMusicVolume(1.5)
         cc.audioEngine.setEffectsVolume(1)
 
+        //难度
         this.stage = 0
+        //回合
         this.round = 0
+        //水果大小
         this.fruitScale = 1
+
+        //是否产生核弹
+        this.hasNuclear = 0
 
         cc.director.preloadScene('OverPage')
 
-        this.callbackfunc = function(){
-            if(this.cnt >= 3){
-                window.score += this.cnt * this.cnt
-                this.comboAdd() 
-            }
-            else{
-                window.score += this.cnt
-            }
-            this.scoreLabel.string = window.score.toString()
-            this.cnt = 0
-        }.bind(this)
-        
-        this.schedule(function(){
-            this.attack(this.randomNum(0, 4 + this.stage))
-            if(++this.round >= 4 && this.stage < 3){
-                this.stage++
-                if(this.stage === 1){
-                    cc.audioEngine.playMusic(this.bgmAudio, true)
-                }
-                this.round = 0
-            }
-        }, 5);
+        this.goButton.node.on('click', function (button) {
+            this.startGame()
+            this.ruleNode.destroy()
+        }.bind(this))
+
+        this.homeButton.node.on('click', function (button) {
+            cc.director.loadScene('StartPage')
+        }.bind(this))
+
+        this.state = 0
+        this.pauseButton.node.on('click', function (button) {
+            this.shiftState()
+        }.bind(this))
+      
     },
 
+    shiftState: function(){
+
+        let node = this.pauseButton.node.getChildByName('Background')
+        let sprite = node.getComponent(cc.Sprite)
+
+        if(this.state === 0){
+            cc.director.pause()
+            node.width = 200
+            cc.loader.loadRes('images/continue', cc.SpriteFrame, function(err, spriteFrame) {          
+                sprite.spriteFrame = spriteFrame
+            }); 
+            this.state = 1
+        }
+        else{
+            cc.director.resume()
+            node.width = 80
+            cc.loader.loadRes('images/pause', cc.SpriteFrame, function(err, spriteFrame) {          
+                sprite.spriteFrame = spriteFrame
+            }); 
+            this.state = 0
+        }
+    },
+
+    startGame: function(){
+        this.node.on('touchstart', this.onTouchStart, this)
+        this.node.on('touchmove', this.onTouchMove, this)
+        this.node.on('touchend', this.onTouchEnd, this)
+
+        this.schedule(this.attackControl, 5, cc.macro.REPEAT_FOREVER, 1);
+    },
+
+    attackControl: function(){
+        this.attack(this.randomNum(0, 4 + this.stage))
+        if(++this.round >= 4 && this.stage < 3){
+            this.stage++
+            if(this.stage === 1){
+                cc.audioEngine.playMusic(this.bgmAudio, true)
+            }
+            if(this.stage >= 2){
+                let rdm = this.randomNum(0, 1)
+                if(rdm === 1){
+                    this.hasNuclear = 1
+                } else {
+                    this.hasNuclear = 0
+                }
+            }
+            this.round = 0
+        }
+    },
+    
+
     initPools: function(){
-        for(let i = 0; i < 6; i++){
+        for(let i = 0; i < 7; i++){
             this.pools[i] = new cc.NodePool()
 
             if(i < 5){
@@ -235,7 +311,7 @@ cc.Class({
         if(id === 0){
             let count = this.randomNum(3 + 2 * this.stage, 3 + this.stage * 3)
             for(let i = 0; i < count; i++){
-                let fruit = this.randomNum(0, 5)
+                let fruit = this.randomNum(0, 5 + this.hasNuclear)
                 let stx = this.randomNum(-650, 650)
                 let edx = this.randomNum(-650, 650)
                 this.produceFruit(fruit, stx, -400, edx, -400, 0) 
@@ -245,7 +321,7 @@ cc.Class({
         else if(id === 1){
             let count = this.randomNum(5 + 2 * this.stage, 5 + this.stage * 3)
             this.schedule( function(){
-                let fruit = this.randomNum(0, 5)
+                let fruit = this.randomNum(0, 5 + this.hasNuclear)
                 let stx = this.randomNum(-650, 650)
                 let edx = this.randomNum(-650, 650)
                 this.produceFruit(fruit, stx, -400, edx, -400, 0) 
@@ -256,7 +332,7 @@ cc.Class({
         else if(id === 2){
             let count = this.randomNum(4 + 2 * this.stage, 4 + this.stage * 3)
             this.schedule( function(){
-                let fruit = this.randomNum(0, 5)
+                let fruit = this.randomNum(0, 5 + this.hasNuclear)
                 this.produceFruit(fruit, -600, -400, 1000, -400, 0) 
                 this.produceFruit(fruit, 600, -400, -1000, -400, 0) 
             }.bind(this), 0.8 - this.stage * 0.2, count)
@@ -266,7 +342,7 @@ cc.Class({
         else if(id === 3){
             for(let i = -1; i < 2; i++){
                 for(let j = -1; j < 2; j++){
-                    let fruit = this.randomNum(0, 5)
+                    let fruit = this.randomNum(0, 5 + this.hasNuclear)
                     let shift = this.randomNum(0, 1)
                     let stx = 700, sty = 150 * j
                     if(shift && j === 0){
@@ -282,7 +358,7 @@ cc.Class({
             for(let i = -1; i <= 1; i++){
                 if(i === 0) continue
                 for(let j = -2; j <= 2; j++){
-                    let fruit = this.randomNum(0, 5)
+                    let fruit = this.randomNum(0, 5 + this.hasNuclear)
                     this.produceFruit(fruit, 700 * i, 100 * i, 150 * j, 100 * i, 1)
                 }
             }
@@ -292,7 +368,7 @@ cc.Class({
         else if(id === 5){
             for(let i = -1; i <= 1; i++){
                 for(let j = -2; j <= 2; j++){
-                    let fruit = this.randomNum(0, 5)
+                    let fruit = this.randomNum(0, 5 + this.hasNuclear)
                     this.produceFruit(fruit, -700, 150 * i, 150 * j, 150 * i, 1)
                 }
             }
@@ -301,11 +377,13 @@ cc.Class({
         else if(id === 6){
             for(let i = -2; i <= 2; i++){
                 for(let j = Math.abs(i) - 2; j <= -(Math.abs(i) - 2); j++){
-                    let fruit = this.randomNum(0, 5)
+                    let fruit = this.randomNum(0, 5 + this.hasNuclear)
                     this.produceFruit(fruit, 700, 150 * i, 150 * j, 150 * i, 1)
                 }
             }
         }
+
+        
 
     },
 
@@ -428,6 +506,18 @@ cc.Class({
         }.bind(this))))
     },
 
+    updateScore:function(){
+        if(this.comboCnt >= 3){
+            window.score += this.comboCnt * this.comboCnt
+            this.comboAdd() 
+        }
+        else{
+            window.score += this.comboCnt
+        }
+        this.scoreLabel.string = window.score.toString()
+        this.comboCnt = 0
+    },
+
     missAdd: function(){
         this.fruitScale = 1
 
@@ -451,11 +541,12 @@ cc.Class({
 
     comboAdd: function(){
         cc.audioEngine.playEffect(this.comboAudio, false)
-        this.recover(Math.min(3, this.cnt - 2))
-        this.fruitScale = Math.max(this.fruitScale, 1 + (this.cnt - 3)/10)
+        this.recover(Math.min(3, this.comboCnt - 2))
+        this.fruitScale = Math.max(this.fruitScale, 1 + (this.comboCnt - 3)/10)
 
         let combo = cc.instantiate(this.comboPrefab)
-        combo.scale = this.cnt / 8
+        combo.Name = 'combo'
+        combo.scale = this.comboCnt / 8
         this.node.addChild(combo)
         this.scheduleOnce(function(){combo.destroy()}, 2)
     },
@@ -469,12 +560,58 @@ cc.Class({
         bomb.setPosition(loc)
     },
 
+    nuclearBoom: function(loc){
+
+        this.unscheduleAllCallbacks()
+        cc.audioEngine.stopMusic()
+        cc.audioEngine.stopAllEffects()
+
+        this.pauseButton.interactable = false
+        this.homeButton.interactable = false
+
+        let fruits = this.node.children
+        
+        for(let i = fruits.length - 1; i >= 0; i--){
+            if(fruits[i] && fruits[i].Name && fruits[i].Name.length === 1){
+                fruits[i].stopAllActions()
+            }
+        }
+
+        this.miss = 0x3f3f3f3f
+
+        this.scheduleOnce(function(){
+            for(let i = fruits.length - 1; i >= 0; i--){
+                if(fruits[i] && fruits[i].Name &&  (fruits[i].Name.length === 1 || fruits[i].Name === 'combo')){
+                    fruits[i].destroy()
+                }
+            }
+        }.bind(this),  3)
+
+        this.node.off('touchstart', this.onTouchStart, this)
+        this.node.off('touchmove', this.onTouchMove, this)
+        this.node.off('touchend', this.onTouchEnd, this)
+
+        let over = cc.audioEngine.playEffect(this.nuclearAudio, false)
+        cc.audioEngine.setFinishCallback(over, function () {
+            cc.director.loadScene('OverPage')
+        });
+
+        
+        this.ctx.clear()
+        this.ctx.fillColor = new cc.Color(130, 17, 31)
+
+        let cnt = 0
+        this.schedule(function(){
+            this.drawLight(loc, ++cnt * 30)
+        }.bind(this), 0.1, 100, 3)
+    },
+
     onTouchStart: function(touch, event){
         this.points.push(touch.getLocation())
 
-        this.cnt = 0
+        this.comboCnt = 0
 
-        this.schedule(this.callbackfunc, 0.75, cc.macro.REPEAT_FOREVER, 0.75)
+        this.schedule(this.updateScore, 0.75, cc.macro.REPEAT_FOREVER, 0.75)
     },
 
     onTouchMove: function(touch, event){
@@ -509,32 +646,40 @@ cc.Class({
         let loc = fruit.getPosition()
         let id = parseInt(fruit.Name)
         fruit.stopAllActions()
-        this.pools[id].put(fruit)
+        
         if(id < 5) {
+            this.pools[id].put(fruit)
             this.producePieces(id, loc)
             this.produceJuice(id, loc)
-            this.cnt++
+            this.comboCnt++
         }
-        else{
+        else if(id === 5){
+            this.pools[id].put(fruit)
             this.boom(loc)
-            this.cnt = 0
-            window.score = Math.max(0, window.score - 100)
+            this.comboCnt = 0
+            window.score = Math.max(0, window.score - 10)
             this.scoreLabel.string = window.score.toString()
+        }  
+        else if(id === 6){
+
+            this.nuclearBoom(loc)
+            
         }    
     },
 
-    
-
     onTouchEnd: function(touch, event){
         this.points.length = 0
-        this.unschedule(this.callbackfunc)
-        this.callbackfunc()
+        this.unschedule(this.updateScore)
+        this.updateScore()
     },
 
     gameOver: function(){
         this.unscheduleAllCallbacks()
         cc.audioEngine.stopMusic()
         cc.audioEngine.stopAllEffects()
+
+        this.pauseButton.interactable = false
+        this.homeButton.interactable = false
 
         this.node.off('touchstart', this.onTouchStart, this)
         this.node.off('touchmove', this.onTouchMove, this)
@@ -546,7 +691,7 @@ cc.Class({
         });
     },
 
-    draw: function() {
+    drawKnife: function() {
         let linewidth = 40
 	    let linewidthinc = 1
 	    let linewidth2 = 1
@@ -575,6 +720,12 @@ cc.Class({
 
             this.ctx.stroke()
 	    }
+    },
+
+    drawLight: function(pos, radius){
+        
+        this.ctx.circle(pos.x, pos.y, radius)
+        this.ctx.fill()
     },
 
     start () {
@@ -612,6 +763,7 @@ cc.Class({
                    this.randomNum(0, 200), 
                    this.randomNum(150, 255)]
         this.ctx.strokeColor = new cc.Color(rgb[0], rgb[1], rgb[2])
-        this.draw()
+        this.drawKnife()
+        
     },
 });
