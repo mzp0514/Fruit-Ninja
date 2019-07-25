@@ -243,7 +243,7 @@ cc.Class({
         cc.audioEngine.playMusic(this.bgmAudio, true)
       }
       if (this.stage >= 2) {
-        const rdm = this.randomNum(0, 1)
+        const rdm = this.randomNum(0, 2)
         if (rdm === 1) {
           this.hasNuclear = 1
         } else {
@@ -309,7 +309,7 @@ cc.Class({
     if (id === 0) {
       const count = this.randomNum(3 + 2 * this.stage, 3 + this.stage * 3)
       for (let i = 0; i < count; i++) {
-        const fruit = this.randomNum(0, 5 + this.hasNuclear)
+        const fruit = this.randomNum(0, 5)
         const stx = this.randomNum(-650, 650)
         const edx = this.randomNum(-650, 650)
         this.produceFruit(fruit, stx, -400, edx, -400, 0)
@@ -368,6 +368,7 @@ cc.Class({
 
   // param: fruit-id, pos_st, pos_ed, curve(0:bezier 1:straight l-r 2:straight u-d)
   produceFruit: function (id, xst, yst, xed, yed, type) {
+    if (id === 6) { this.hasNuclear = 0 }
     cc.audioEngine.playEffect(this.throwAudio, false)
 
     let item = null
